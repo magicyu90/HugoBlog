@@ -209,7 +209,7 @@ sidebar:
   b2t: false
 
   # Scroll percent label in b2t button.
-  scrollpercent: false
+  scrollpercent: true
 
   # Enable sidebar on narrow view (only for Muse | Mist).
   onmobile: false
@@ -410,7 +410,7 @@ valine:
 
 # Support for LiveRe comments system.
 # You can get your uid from https://livere.com/insight/myCode (General web site)
-#livere_uid: your uid
+livere_uid: MTAyMC80NzU4Ny8yNDA4Nw==
 
 # Gitment
 # Introduction: https://imsun.net/posts/gitment-introduction/
@@ -436,16 +436,16 @@ gitment:
 #baidushare:
 ##  type: button
 
-baidushare:
-  type: button
-  baidushare: true
+# baidushare:
+#   type: button
+#   baidushare: false
 
 # Share
 # This plugin is more useful in China, make sure you known how to use it.
 # And you can find the use guide at official webiste: http://www.jiathis.com/.
 # Warning: JiaThis does not support https.
 jiathis:
-  true
+  false
   ##uid: Get this uid from http://www.jiathis.com/
 #add_this_id:
 
@@ -748,7 +748,7 @@ vendors:
   _internal: lib
 
   # Internal version: 2.1.3
-  jquery:
+  jquery: https://cdn.jsdelivr.net/npm/jquery@2.1.3/dist/jquery.min.js
 
   # Internal version: 2.1.5
   # See: http://fancyapps.com/fancybox/
@@ -831,3 +831,8 @@ images: images
 
 # Theme version
 version: 5.1.4
+
+
+# 文章末尾添加“本文结束”标记
+passage_end_tag:
+  enabled: true
