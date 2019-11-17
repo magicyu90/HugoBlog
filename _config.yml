@@ -1,0 +1,92 @@
+# Hexo Configuration
+## Docs: https://hexo.io/docs/configuration.html
+## Source: https://github.com/hexojs/hexo/
+
+# Site
+title: Hugo的自由广场
+subtitle: Stay Hungry Stay Foolish
+description: 有一颗写手之心的IT文艺青年
+author: 育子
+language: zh-Hans
+timezone: 
+avatar: /images/avatar.jpg
+
+# URL
+## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
+url: http://blog.magicyu.cn
+root: /
+#修改默认文章链接形式 因为对搜索引擎不友好 :year/:month/:day/:title/ => :title.html
+permalink: :title/
+permalink_defaults:
+
+# Directory
+source_dir: source
+public_dir: public
+tag_dir: tags
+archive_dir: archives
+category_dir: categories
+code_dir: downloads/code
+i18n_dir: :lang
+skip_render:
+
+# Writing
+new_post_name: :title.md # File name of new posts
+default_layout: post
+titlecase: false # Transform title into titlecase
+external_link: true # Open external links in new tab
+filename_case: 0
+render_drafts: false
+post_asset_folder: true
+relative_link: false
+future: true
+highlight:
+  enable: true
+  line_number: true
+  auto_detect: false
+  tab_replace:
+
+# Category & Tag
+default_category: uncategorized
+category_map:
+tag_map:
+
+# Date / Time format
+## Hexo uses Moment.js to parse and display date
+## You can customize the date format as defined in
+## http://momentjs.com/docs/#/displaying/format/
+date_format: YYYY-MM-DD
+time_format: HH:mm:ss
+
+# Pagination
+## Set per_page to 0 to disable pagination
+per_page: 10
+pagination_dir: page
+
+# Extensions
+## Plugins: https://hexo.io/plugins/
+## Themes: https://hexo.io/themes/
+theme: next
+
+# Deployment
+## Docs: https://hexo.io/docs/deployment.html
+deploy:
+  type: git
+  repo: https://github.com/magicyu90/magicyu90.github.io
+  branch: master
+
+
+# markdown渲染引擎把回车当做<br>处理
+marked:
+  gfm: true
+  breaks: false
+
+# 添加搜索配置
+search:
+  path: search.xml
+  field: post
+  format: html
+  limit: 10000
+
+# 首页文章显示篇数
+index_generator:
+  per_page: 7
