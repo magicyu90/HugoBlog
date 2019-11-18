@@ -9,6 +9,10 @@ Pandas 是非常著名的开源数据处理库，我们可以通过它完成对�
 <!-- more -->
 
 ### Group操作
+Groupby 是pandas 中非常重要的一个函数, 主要用于数据聚合和分类计算. 其思想是“split-apply-combine”（拆分 - 应用 - 合并）。
+{% asset_img 0.png groupby流程%}
+只要理解好这个流程思想，进行groupby操作就会相对容易些。
+
 在接下来的操作中，我们使用Pandas和Numpy类库，首选从网上down一个基础的DataFrame进行相关操作。
 
 ```

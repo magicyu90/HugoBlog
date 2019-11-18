@@ -40,7 +40,7 @@ keywords: "申育,IT笔记"
 # Set rss to false to disable feed link.
 # Leave rss as empty to use site's feed link.
 # Set rss to specific value if you have burned your feed already.
-rss:
+rss: atom.xml
 
 footer:
   # Specify the date when the site was setup.
@@ -624,7 +624,7 @@ algolia_search:
 # Local search
 # Dependencies: https://github.com/flashlab/hexo-generator-search
 local_search:
-  enable: false
+  enable: true
   # if auto, trigger search by changing input
   # if manual, trigger search by pressing enter key or search button
   trigger: auto
@@ -712,7 +712,7 @@ pace: true
 #pace-theme-minimal
 # For example
 # pace_theme: pace-theme-center-simple
-pace_theme: pace-theme-big-counter
+pace_theme: pace-theme-minimal
 
 # Canvas-nest
 canvas_nest: false
