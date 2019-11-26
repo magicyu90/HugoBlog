@@ -164,7 +164,8 @@ links_title: 友情链接
 #links_layout: block
 #links_layout: inline
 links:
-  豪杰: https://shady-xia.github.iohex
+  豪杰: http://www.mshady.com
+  兴潭: https://www.cnblogs.com/bug-master/
 
 # Sidebar Avatar
 # in theme directory(source/images): /images/avatar.gif
