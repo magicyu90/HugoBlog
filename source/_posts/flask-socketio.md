@@ -1,7 +1,7 @@
 ---
 title: flask_socketio深入探究
 date: 2019-05-04 17:04:56
-tags: [socketio,websocket]
+tags: [flask,socketio,websocket]
 categories: Python
 ---
 
