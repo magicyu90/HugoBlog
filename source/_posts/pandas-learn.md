@@ -15,7 +15,7 @@ Groupby 是pandas 中非常重要的一个函数, 主要用于数据聚合和分
 
 在接下来的操作中，我们使用Pandas和Numpy类库，首选从网上down一个基础的DataFrame进行相关操作。
 
-```
+``` python
 In [1]: import pandas as pd
 In [2]: import numpy as np
 In [3]: url = 'https://gist.githubusercontent.com/alexdebrie/b3f40efc3dd7664df5a20f5eee85e854/raw/ee3e6feccba2464cbbc2e185fb17961c53d2a7f5/stocks.csv'
@@ -41,13 +41,13 @@ Out[5]:
 ```
 我们接下来以symbol进行分组。
 
-```
+``` python
 In [6]:symbols=df.groupby('symbol')
 In [7]:print(symbols.groups)
 {'AAPL': Int64Index([5, 6, 7, 8, 9], dtype='int64'), 'AMZN': Int64Index([0, 1, 2, 3, 4], dtype='int64'), 'GOOG': Int64Index([10, 11, 12, 13, 14], dtype='int64')}
 ```
 groupby方法是相当灵活的，可以对多个列进行分组。我们可以对symbol和date两列或者更多列进行分组。
-```
+``` python
 In [21]: df.groupby(['date','symbol']).groups
 Out[21]: 
 {('2019-03-01', 'AAPL'): Int64Index([5], dtype='int64'),
@@ -67,7 +67,7 @@ Out[21]:
  ('2019-03-07', 'GOOG'): Int64Index([14], dtype='int64')}
 ```
 使用自定义方法进行groupby操作，在groupby方法中传递自定义方法，该自定义方法需要传递每行的index并返回进行group的值。
-```
+``` python
 In [16]: def increased(idx):
     ...:     return df.loc[idx].close > df.loc[idx].open
     ...: 
@@ -78,7 +78,7 @@ Out[17]:
  True: Int64Index([0, 1, 5, 6, 10, 11, 12], dtype='int64')}
 ```
 对pandas分组的结果进行后续操作，我们对分组结果计算平均值，如下。
-```
+``` python
 In [39]: symbols['volume'].agg(np.mean)
 Out[39]: 
 symbol
@@ -88,7 +88,7 @@ GOOG     1321077.0
 Name: volume, dtype: float64
 ```
 我们也可以同时返回多个需要聚合计算的结果，如下：
-```
+``` python
 In [40]: symbols['volume'].agg(['min','max','sum','mean'])
 Out[40]: 
              min       max        sum        mean
@@ -98,7 +98,7 @@ AMZN     3681522   6167358   23776775   4755355.0
 GOOG     1099289   1450316    6605385   1321077.0
 ```
 遍历并选择group
-```
+``` python
 In [43]: for symbol,group in symbols:
     ...:     print(symbol)
     ...:     print(group)
@@ -126,12 +126,12 @@ GOOG
 14  2019-03-07   GOOG  1155.72  1156.76  1134.91  1143.30  1166559
 ```
 获取group全部的keys：
-```
+``` python
 In [44]: symbols.groups.keys()
 Out[44]: dict_keys(['AAPL', 'AMZN', 'GOOG'])
 ```
 获取group的某一组：
-```
+``` python
 In [47]: symbols.get_group('AAPL')
 Out[47]: 
          date symbol    open    high     low   close    volume
@@ -142,7 +142,7 @@ Out[47]:
 9  2019-03-07   AAPL  173.87  174.44  172.02  172.50  24796374
 ```
 count()方法，获取DataFrame每列value的个数:
-```
+``` python
 In [51]: df.count()
 Out[51]: 
 date      15
@@ -155,7 +155,7 @@ volume    15
 dtype: int64
 ```
 value_counts()方法，该方法返回某一列的不同的个数，bins参数用来指定多少个设置多少个箱：
-```
+``` python
 In [61]: df['volume'].value_counts(bins=4)
 Out[61]: 
 (1072952.085, 7683517.5]    10
@@ -168,7 +168,7 @@ counts()和value_counts()方法可以用来快速确定DataFrame的大小。
 
 ### Grouper操作
 首先，我们从网上把数据下载下来，后面的操作都是基于这份数据的：
-```
+``` python
 In [1]: import pandas as pd
 In [2]: df = pd.read_excel("https://github.com/chris1610/pbpython/blob/master/data/sample-salesv3.xlsx?raw=True")
 In [3]: df
@@ -176,7 +176,7 @@ In [3]: df
 {% asset_img 1.png %}
 
 下面，我们统计'ext price'这个属性在每个月的累和(sum)值，resample 只有在index为**date**类型的时候才能用：
-```
+``` python
 In [17]: df.set_index('date').resample('M')['ext price'].sum()
 Out[17]: 
 date
@@ -198,7 +198,7 @@ Freq: M, Name: ext price, dtype: float64
 {% asset_img 2.png 时间聚合参数 %}
 
 如果我们想知道每个用户每个月的sum值，那么就需要一个groupby了：
-```
+``` python
 In [20]: df.set_index('date').groupby('name')['ext price'].resample('M').sum()
 Out[20]: 
 name                             date      
@@ -228,7 +228,7 @@ Cronin, Oberbrunner and Spencer  2014-01-31     1141.75
                                  2014-12-31     7640.60
 ```
 以上写法不是很直观，可以使用[Grouper](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Grouper.html)写得更加简洁：
-```
+``` python
 In [22]: df.groupby(['name',pd.Grouper(key='date',freq='M')])['ext price'].sum()
 Out[22]: 
 name                             date      

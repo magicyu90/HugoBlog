@@ -16,7 +16,7 @@ axis：按那个方向检索 0：按逐行索引向下走 1;按逐列 向右走
 
 ### apply使用
 如果我们想创建一个新列，其中包含其他列内容作为输入，那么apply函数会非常有用。
-```
+``` python
 In [45]: df = pd.DataFrame({ 'c1':[ 'high' ,'high', 'low', 'low'], 'c2': [0, 23, 17, 4]})
 In [46]: df
 Out[46]: 
@@ -27,7 +27,7 @@ Out[46]:
 3   low   4
 ```
 定义一个方法
-```
+``` python
 In [47]: def rule(x,y):
     ...:     if x=='high' and y>10:
     ...:         return 1
@@ -46,7 +46,7 @@ Out[49]:
 
 ### DataFrame删除行和列
 数据准备如下：
-```
+``` python
 In [1]:
 import numpy as np
 import pandas as pd
@@ -78,7 +78,7 @@ date    spring  summer  autumn  winter
 
 #### 删除行
 .drop()方法如果不设置参数**inplace=True**，则只能在生成的新数据块中实现删除效果，而不能删除原有数据块的相应行。如果inplace=True则原有数据块的相应行被删除
-```
+``` python
 In [4]:
 odata.drop(odata.index[[16,17]],inplace=True)
 odata
@@ -109,7 +109,7 @@ date    spring  summer  autumn  winter
 .pop方法可以将所选列从原数据块中弹出，原数据块不再保留该列
 #### .drop()方法
 drop方法既可以保留原数据块中的所选列，也可以删除，这取决于参数inplace
-```
+``` python
 In [8]:
 withoutSummer = odata.drop(['summer'],axis=1)
 withoutSummer
@@ -156,7 +156,7 @@ summer  autumn  winter
 15  16.5061231667   12.4424366333   11.0181384
 ```
 当inplace=True时.drop()执行内部删除，不返回任何值，原数据发生改变
-```
+``` python
 In [10]:
 withoutWinter = odata.drop(['winter'],axis=1,inplace=True)
 type(withoutWinter)

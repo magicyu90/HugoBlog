@@ -26,10 +26,163 @@ Flask提供了两种上下文，一种是[<font color=#FFD700 size=3>应用上�
 
 >Python Web开发中，这个标准就是 The Web Server Gateway Interface, 即 WSGI. 这个标准在PEP 333中描述，后来，为了支持 Python 3.x, 并且修正一些问题，新的版本在PEP 3333中描述。
 
+{% asset_img wsgi.png WSGI服务器和应用的交互 %}
+
+### 请求上下文
+
+Flask中所有的请求处理都在“请求上下文”中进行，在它设计之初便就有这个概念。每次发起请求给服务器之后，在请求上下文的函数我们都可以访问request对象，然而request对象却并不是全局的，因为当我们随便声明一个函数的时候，比如：
+``` python
+def handle_request():
+    print 'handle request'
+    print request.url 
+if __name__=='__main__':
+    handle_request()
+```
+此时运行就会产生：
+> RuntimeError: working outside of request context。
+因此可知，Flask的request对象只有在其上下文的生命周期内才有效，离开了请求的生命周期，其上下文环境不存在了，也就无法获取request对象了。
+
+
+**请求上下文代码解析**
+
+``` python
+# Flask v0.1
+class _RequestContext(object):
+   """The request context contains all request relevant information.  It is
+    created at the beginning of the request and pushed to the
+    `_request_ctx_stack` and removed at the end of it.  It will create the
+    URL adapter and request object for the WSGI environment provided.
+    """
+
+    def __init__(self, app, environ):
+        self.app = app
+        self.url_adapter = app.url_map.bind_to_environ(environ)
+        self.request = app.request_class(environ)
+        self.session = app.open_session(self.request)
+        self.g = _RequestGlobals()
+        self.flashes = None
+
+    def __enter__(self):
+        _request_ctx_stack.push(self)
+
+    def __exit__(self, exc_type, exc_value, tb):
+        # do not pop the request stack if we are in debug mode and an
+        # exception happened.  This will allow the debugger to still
+        # access the request object in the interactive shell.
+        if tb is None or not self.app.debug:
+            _request_ctx_stack.pop()
+```
+
+代码分析：
+1. 请求上下文是一个上下文对象，实现了__enter__和__exit__方法。可以使用with语句构造一个上下文环境。
+2. 进入上下文环境时，_request_ctx_stack这个栈中会推入一个_RequestContext对象。这个栈结构就是上面讲的LocalStack栈。
+3. 推入栈中的_RequestContext对象有一些属性，包含了请求的的所有相关信息。例如app、request、session、g、flashes。还有一个url_adapter，这个对象可以进行URL匹配。
+4. 在with语句构造的上下文环境中可以进行请求处理。当退出上下文环境时，_request_ctx_stack这个栈会销毁刚才存储的上下文对象。
+
+以上的运行逻辑使得请求的处理始终在一个上下文环境中，这保证了请求处理过程不被干扰，而且请求上下文对象保存在LocalStack栈中，也很好地实现了线程/协程的隔离。
+
+``` python
+# example - Flask v0.1
+>>> from flask import Flask, _request_ctx_stack
+>>> import threading
+>>> app = Flask(__name__)
+# 先观察_request_ctx_stack中包含的信息
+>>> _request_ctx_stack._local.__storage__
+{}
+
+# 创建一个函数，用于向栈中推入请求上下文
+# 本例中不使用`with`语句
+>>> def worker():
+        # 使用应用的test_request_context()方法创建请求上下文
+        request_context = app.test_request_context()
+        _request_ctx_stack.push(request_context)
+
+# 创建3个进程分别执行worker方法
+>>> for i in range(3):
+        t = threading.Thread(target=worker)
+        t.start()
+
+# 再观察_request_ctx_stack中包含的信息
+>>> _request_ctx_stack._local.__storage__
+{<greenlet.greenlet at 0x5e45df0>: {'stack': [<flask._RequestContext at 0x710c668>]},
+ <greenlet.greenlet at 0x5e45e88>: {'stack': [<flask._RequestContext at 0x7107f28>]},
+ <greenlet.greenlet at 0x5e45f20>: {'stack': [<flask._RequestContext at 0x71077f0>]}
+}
+```
+上面的结果显示：_request_ctx_stack中为每一个线程创建了一个“键-值”对，每一“键-值”对中包含一个请求上下文对象。如果使用with语句，在离开上下文环境时栈中销毁存储的上下文对象信息。
+
+
+**请求上下文——0.9版本**
+1. 请求上下文实现了push、pop方法，这使得对于请求上下文的操作更加的灵活。
+2. 伴随着请求上下文对象的生成并存储在栈结构中，Flask还会生成一个“应用上下文”对象，而且“应用上下文”对象也会存储在另一个栈结构中去。这是两个版本最大的不同。
+
+*Push方法：*
+``` python
+# Flask v0.9
+def push(self):
+    """Binds the request context to the current context."""
+    top = _request_ctx_stack.top
+    if top is not None and top.preserved:
+        top.pop()
+
+    # Before we push the request context we have to ensure that there
+    # is an application context.
+    app_ctx = _app_ctx_stack.top
+    if app_ctx is None or app_ctx.app != self.app:
+        app_ctx = self.app.app_context()
+        app_ctx.push()
+        self._implicit_app_ctx_stack.append(app_ctx)
+    else:
+        self._implicit_app_ctx_stack.append(None)
+
+    _request_ctx_stack.push(self)
+
+    self.session = self.app.open_session(self.request)
+    if self.session is None:
+        self.session = self.app.make_null_session()
+```
+
+*Pop方法：*
+``` python
+# Flask v0.9
+def pop(self, exc=None):
+    """Pops the request context and unbinds it by doing that.  This will
+    also trigger the execution of functions registered by the
+    :meth:`~flask.Flask.teardown_request` decorator.
+
+    .. versionchanged:: 0.9
+       Added the `exc` argument.
+    """
+    app_ctx = self._implicit_app_ctx_stack.pop()
+
+    clear_request = False
+    if not self._implicit_app_ctx_stack:
+        self.preserved = False
+        if exc is None:
+            exc = sys.exc_info()[1]
+        self.app.do_teardown_request(exc)
+        clear_request = True
+
+    rv = _request_ctx_stack.pop()
+    assert rv is self, 'Popped wrong request context.  (%r instead of %r)' \
+        % (rv, self)
+
+    # get rid of circular dependencies at the end of the request
+    # so that we don't require the GC to be active.
+    if clear_request:
+        rv.request.environ['werkzeug.request'] = None
+
+    # Get rid of the app as well if necessary.
+    if app_ctx is not None:
+        app_ctx.pop(exc)
+
+```
+上面代码中的细节先不讨论。注意到当要离开以上“请求上下文”环境的时候，Flask会先将“请求上下文”对象从_request_ctx_stack栈中销毁，之后会根据实际的情况确定销毁“应用上下文”对象。
+
 ### 应用上下文
 
 应用上下问存在的主要原因是，在过去，请求上下文被附加了一堆函数，但是又没有什么好的解决方案。因为 Flask 设计的支柱之一是你可以在一个 Python 进程中拥有多个应用。首先看一下应用上下文定义类的代码:
-```
+``` python
 class AppContext(object):
     """The application context binds an application object implicitly
     to the current thread or greenlet, similar to how the
@@ -77,7 +230,7 @@ class AppContext(object):
 为了应对这个问题，Flask中将应用相关的信息单独拿出来，形成一个“应用上下文”对象。这个对象可以和“请求上下文”一起使用，也可以单独拿出来使用。不过有一点需要注意的是：在创建“请求上下文”时一定要创建一个“应用上下文”对象。有了“应用上下文”对象，便可以很容易地确定当前处理哪个应用，这就是魔法current_app。
 
 下面以一个多应用的例子进行说明:
-```
+``` python
 # example - Flask v0.9
 >>> from flask import Flask, _request_ctx_stack, _app_ctx_stack
 # 创建两个Flask应用
